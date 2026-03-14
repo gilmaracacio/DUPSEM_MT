@@ -550,7 +550,7 @@
             color: #2c7be5;
         }
 
-        /* Estilo para marcador destacado na busca */
+        /* Estilo para marcador destacado na busca/hover */
         .highlight-marker {
             animation: pulse 1.5s infinite;
         }
@@ -565,6 +565,28 @@
             100% {
                 filter: drop-shadow(0 0 2px rgba(255,0,0,0.7));
             }
+        }
+
+        /* Estilo para marcador selecionado (círculo) */
+        .selected-marker {
+            animation: selected-glow 1s infinite alternate;
+            filter: drop-shadow(0 0 8px rgba(255, 0, 0, 0.8));
+        }
+
+        /* Estilo para marcador selecionado (triângulo) */
+        .selected-marker-icon {
+            filter: drop-shadow(0 0 8px rgba(255, 0, 0, 0.8)) drop-shadow(0 0 2px black) !important;
+            animation: selected-glow 1s infinite alternate;
+        }
+
+        @keyframes selected-glow {
+            from { filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.6)); }
+            to { filter: drop-shadow(0 0 15px rgba(255, 0, 0, 1)); }
+        }
+
+        /* Ajuste para o painel de detalhes não sobrepor a toolbar */
+        .info-panel {
+            z-index: 600;
         }
 
         .triangle-marker-highlight {
@@ -728,12 +750,12 @@
                     <span>Temas de Referência</span>
                     <span class="toggle">▼</span>
                 </div>
+                <div class="layer-items">
                     <div class="layer-item">
                         <input type="checkbox" id="layer-risp" checked onchange="toggleLayer('risp', this.checked)">
                         <div class="layer-color" style="background: #808080; opacity: 0.5;"></div>
                         <span class="layer-label">RISP - Regiões Integradas</span>
                     </div>
-                <div class="layer-items">
                     <div class="layer-item">
                         <input type="checkbox" id="layer-fronteira-50" onchange="toggleLayer('fronteira-50', this.checked)">
                         <div class="layer-color" style="background: #FF0000; opacity: 0.8;"></div>
@@ -754,7 +776,6 @@
                         <div class="layer-color" style="background: #FFFF00; opacity: 0.8;"></div>
                         <span class="layer-label">Faixa de Fronteira 200 km</span>
                     </div>
-
                     <div class="layer-item">
                         <input type="checkbox" id="layer-estado" checked onchange="toggleLayer('estado', this.checked)">
                         <div class="layer-color" style="background: rgb(115, 223, 255); border: 1px solid #000;"></div>
@@ -831,7 +852,6 @@
         </div>
 
         <!-- Bottom Info -->
-        </div>
     </div>
 
     <!-- Footer -->
@@ -850,12 +870,11 @@
     <script>
         // ================= CONFIGURAÇÃO INICIAL DO MAPA =================
         const map = L.map('map', {
-            zoomControl: false, // Remove o controle de zoom vertical
+            zoomControl: false,
             markerPane: L.DomUtil.create('div', 'leaflet-marker-pane'),
             popupPane: L.DomUtil.create('div', 'leaflet-popup-pane')
-        }).setView([-12.6819, -56.9211], 6); // Centro de MT
+        }).setView([-12.6819, -56.9211], 6);
 
-        // Configurar panes com z-index para controle de ordem
         map.createPane('markerPane');
         map.getPane('markerPane').style.zIndex = 900;
         map.createPane('overlayPane');
@@ -884,25 +903,22 @@
         };
 
         // ================= VARIÁVEIS GLOBAIS =================
-        // Camadas do Sistema Socioeducativo (ACIMA)
         let layerSocioCentroNorte = L.layerGroup().addTo(map);
         let layerSocioLeste = L.layerGroup().addTo(map);
         let layerSocioOeste = L.layerGroup().addTo(map);
         let layerSocioSudeste = L.layerGroup().addTo(map);
         let layerSocioSul = L.layerGroup().addTo(map);
-        
-        // Camadas do Sistema Penitenciário (ABAIXO do Socioeducativo)
         let layerPenLeste = L.layerGroup().addTo(map);
         let layerPenOeste = L.layerGroup().addTo(map);
-        
-        // Camadas de Referência (ABAIXO de tudo)
+
         let layerFronteira50, layerFronteira100, layerFronteira150, layerFronteira200;
         let layerRISP, layerEstado;
-        
+
         let listaUnidades = new Set();
         let currentHighlight = null;
+        let infoPanel = null;
 
-        // Função para ajustar tamanho dos marcadores baseado no zoom
+        // ================= FUNÇÕES AUXILIARES =================
         function getMarkerSize() {
             let z = map.getZoom();
             return z < 6 ? 8 : z < 8 ? 10 : z < 10 ? 12 : 14;
@@ -912,25 +928,15 @@
             let size = getMarkerSize();
             [layerPenLeste, layerPenOeste, layerSocioCentroNorte, layerSocioLeste, layerSocioOeste, layerSocioSudeste, layerSocioSul].forEach(g => {
                 g.eachLayer(l => {
-                    if (l.setRadius) l.setRadius(size);
+                    if (l.setRadius && !l.feature?.selected) l.setRadius(size);
                 });
             });
         });
 
-        // Função para criar popup das unidades
+        // --- Funções de Popup e Painel de Detalhes ---
         function criarPopupUnidade(propriedades) {
-            let html = '<div class="popup-title"><i class="fa-solid fa-building"></i> Unidade</div>';
-            html += '<table class="popup-table">';
-            
-            const campos = {
-                'Name': 'Nome',
-                'Snippet': 'Endereço',
-                'Tipo': 'Tipo',
-                'Regiao': 'Região',
-                'Municipio': 'Município',
-                'Sigla': 'Sigla'
-            };
-            
+            let html = '<div class="popup-title"><i class="fa-solid fa-building"></i> Unidade</div><table class="popup-table">';
+            const campos = { 'Name': 'Nome', 'Snippet': 'Endereço', 'Tipo': 'Tipo', 'Regiao': 'Região', 'Municipio': 'Município', 'Sigla': 'Sigla' };
             for (let [chave, rotulo] of Object.entries(campos)) {
                 let valor = propriedades[chave] || '-';
                 html += `<tr><td>${rotulo}:</td><td>${valor}</td></tr>`;
@@ -939,19 +945,82 @@
             return html;
         }
 
-        // Função para criar popup das RISP
         function criarPopupRISP(propriedades) {
-            let html = '<div class="popup-title"><i class="fa-solid fa-shield"></i> RISP</div>';
-            html += '<table class="popup-table">';
-            html += `<tr><td>RISP:</td><td>${propriedades.RISP || '-'}</td></tr>`;
-            html += `<tr><td>Nota:</td><td>${propriedades.NOTA || '-'}</td></tr>`;
-            html += '</table>';
-            return html;
+            return `<div class="popup-title"><i class="fa-solid fa-shield"></i> RISP</div><table class="popup-table"><tr><td>RISP:</td><td>${propriedades.RISP || '-'}</td></tr><tr><td>Nota:</td><td>${propriedades.NOTA || '-'}</td></tr></table>`;
         }
 
-        // ================= CARREGAR DADOS - ORDEM CONTROLADA =================
-        
-        // 1. Primeiro carregar as camadas de fundo (temas de referência) - Ficam abaixo
+        function criarPainelDetalhes(propriedades) {
+            if (infoPanel) map.removeControl(infoPanel);
+
+            infoPanel = L.control({ position: 'bottomleft' });
+
+            infoPanel.onAdd = function() {
+                this._div = L.DomUtil.create('div', 'info-panel');
+                this._div.innerHTML = `
+                    <div style="background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); margin: 10px; max-width: 260px; border-left: 5px solid #2c7be5;">
+                        <h4 style="margin: 0 0 8px 0; color: #1e3a5f; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-circle-info" style="color: #2c7be5;"></i> Detalhes da Unidade
+                        </h4>
+                        <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
+                            ${Object.entries(propriedades).map(([key, val]) => {
+                                if (val && val !== '-') {
+                                    let label = { 'Name':'Nome', 'Snippet':'Endereço', 'Tipo':'Tipo', 'Regiao':'Região', 'Municipio':'Município', 'Sigla':'Sigla' }[key] || key;
+                                    return `<tr><td style="font-weight: 600; padding: 3px 0; color: #1e3a5f; width: 40%;">${label}:</td><td style="padding: 3px 0;">${val}</td></tr>`;
+                                }
+                                return '';
+                            }).join('')}
+                        </table>
+                    </div>
+                `;
+                return this._div;
+            };
+            infoPanel.addTo(map);
+        }
+
+        function limparSelecao() {
+            if (currentHighlight) {
+                if (currentHighlight.setStyle) {
+                    currentHighlight.setStyle(currentHighlight.originalStyle);
+                    if (currentHighlight._path) {
+                        currentHighlight._path.classList.remove('highlight-marker');
+                        currentHighlight._path.classList.remove('selected-marker');
+                    }
+                } else if (currentHighlight._icon) {
+                    currentHighlight._icon.classList.remove('triangle-marker-highlight');
+                    currentHighlight._icon.classList.remove('selected-marker-icon');
+                }
+                currentHighlight.feature.selected = false;
+                currentHighlight = null;
+            }
+            if (infoPanel) {
+                map.removeControl(infoPanel);
+                infoPanel = null;
+            }
+        }
+
+        function selecionarUnidade(marker) {
+            limparSelecao();
+
+            if (marker.setStyle) {
+                marker.originalStyle = { radius: marker.options.radius, fillColor: marker.options.fillColor, color: marker.options.color, weight: marker.options.weight, fillOpacity: marker.options.fillOpacity };
+                marker.setStyle({ radius: marker.options.radius + 6, color: '#FF0000', weight: 4, fillOpacity: 1 });
+                if (marker._path) {
+                    marker._path.classList.add('selected-marker');
+                    marker._path.classList.remove('highlight-marker');
+                }
+            } else if (marker._icon) {
+                marker._icon.classList.add('selected-marker-icon');
+                marker._icon.classList.remove('triangle-marker-highlight');
+            }
+
+            marker.feature.selected = true;
+            currentHighlight = marker;
+
+            marker.openPopup();
+
+        }
+
+        // ================= CARREGAR DADOS =================
         
         // Faixa de Fronteira 50km
         fetch("https://raw.githubusercontent.com/gilmaracacio/DUPSEM_MT/main/Faixa_de_Fronteira_50_km.geojson")
@@ -1017,34 +1086,20 @@
         fetch("https://raw.githubusercontent.com/gilmaracacio/DUPSEM_MT/main/RISP.geojson")
             .then(r => r.json())
             .then(data => {
-                // Cores diferentes para cada RISP
-                const cores = [
-                    "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", 
-                    "#FFE194", "#E8A598", "#B5EAD7", "#C7CEEA"
-                ];
-                
+                const cores = [ "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFE194", "#E8A598", "#B5EAD7", "#C7CEEA" ];
                 layerRISP = L.geoJSON(data, {
                     style: (feature) => {
                         let risp = feature.properties.RISP;
-                        // Gerar cor baseada no número da RISP
                         let num = parseInt(risp?.replace(/\D/g, '')) || 0;
-                        return {
-                            color: "#00FFFF",
-                            weight: 0.7,
-                            fillColor: cores[num % cores.length],
-                            fillOpacity: 0.4
-                        };
+                        return { color: "#00FFFF", weight: 0.7, fillColor: cores[num % cores.length], fillOpacity: 0.4 };
                     },
-                    onEachFeature: (feature, layer) => {
-                        layer.bindPopup(criarPopupRISP(feature.properties));
-                    },
+                    onEachFeature: (feature, layer) => layer.bindPopup(criarPopupRISP(feature.properties)),
                     pane: 'overlayPane'
                 });
+                layerRISP.addTo(map);
+            });
 
-        layerRISP.addTo(map);
-    });
-
-        // Limite do Estado - com a cor especificada
+        // Limite do Estado
         fetch("https://raw.githubusercontent.com/gilmaracacio/DUPSEM_MT/main/ESTADO.geojson")
             .then(r => r.json())
             .then(data => {
@@ -1058,12 +1113,10 @@
                     },
                     pane: 'overlayPane'
                 });
-                // Adicionar automaticamente ao mapa
                 layerEstado.addTo(map);
             });
 
-        // 2. Depois carregar Sistema Penitenciário (camada intermediária)
-        // 3. Por último carregar Sistema Socioeducativo (para ficar acima)
+        // UNIDADES (DUPSEM_MT)
         fetch("https://raw.githubusercontent.com/gilmaracacio/DUPSEM_MT/main/DUPSEM_MT.geojson")
             .then(r => r.json())
             .then(data => {
@@ -1072,97 +1125,75 @@
                         let tipo = f.properties.Tipo;
                         let regiao = f.properties.Regiao;
                         let marker;
-                        
-                        // Definir estilo baseado no tipo e região
+                        let baseSize = getMarkerSize();
+
                         if (tipo === "Sistema Penitenciário de Mato Grosso") {
-                            if (regiao === "Regional Leste") {
-                                marker = L.circleMarker(latlng, {
-                                    radius: getMarkerSize(),
-                                    fillColor: "#FFA500",
-                                    color: "#000",
-                                    weight: 2,
-                                    fillOpacity: 0.9,
-                                    pane: 'markerPane'
-                                });
-                                layerPenLeste.addLayer(marker);
-                            } else if (regiao === "Regional Oeste") {
-                                marker = L.circleMarker(latlng, {
-                                    radius: getMarkerSize(),
-                                    fillColor: "#90EE90",
-                                    color: "#000",
-                                    weight: 2,
-                                    fillOpacity: 0.9,
-                                    pane: 'markerPane'
-                                });
-                                layerPenOeste.addLayer(marker);
-                            }
+                            let cor = regiao === "Regional Leste" ? "#FFA500" : "#90EE90";
+                            marker = L.circleMarker(latlng, {
+                                radius: baseSize,
+                                fillColor: cor,
+                                color: "#000",
+                                weight: 2,
+                                fillOpacity: 0.9,
+                                pane: 'markerPane'
+                            });
+                            if (regiao === "Regional Leste") layerPenLeste.addLayer(marker);
+                            else layerPenOeste.addLayer(marker);
+
                         } else if (tipo === "Sistema Socioeducativo de Mato Grosso") {
-                            // Criar marcador triangular com efeito de sombra (igual à legenda)
-                            let size = getMarkerSize();
-                            let color;
-                            
-                            if (regiao === "Região Centro Norte") {
-                                color = "#0000FF";
-                            } else if (regiao === "Região Leste") {
-                                color = "#800080";
-                            } else if (regiao === "Região Oeste") {
-                                color = "#90EE90";
-                            } else if (regiao === "Região Sudeste") {
-                                color = "#8B4513";
-                            } else if (regiao === "Região Sul") {
-                                color = "#008000";
-                            }
-                            
-                            // Criar um divIcon com triângulo usando CSS border com efeito de sombra
+                            let cor = { "Região Centro Norte": "#0000FF", "Região Leste": "#800080", "Região Oeste": "#90EE90", "Região Sudeste": "#8B4513", "Região Sul": "#008000" }[regiao];
                             marker = L.marker(latlng, {
                                 icon: L.divIcon({
                                     className: 'triangle-marker',
-                                    html: `<div style="
-                                        width: 0;
-                                        height: 0;
-                                        border-left: ${size}px solid transparent;
-                                        border-right: ${size}px solid transparent;
-                                        border-bottom: ${size*2}px solid ${color};
-                                        position: relative;
-                                        filter: drop-shadow(0 0 2px black);
-                                    "></div>`,
-                                    iconSize: [size*2, size*2],
-                                    iconAnchor: [size, size],
-                                    popupAnchor: [0, -size]
+                                    html: `<div style="width:0; height:0; border-left: ${baseSize}px solid transparent; border-right: ${baseSize}px solid transparent; border-bottom: ${baseSize*2}px solid ${cor}; position:relative; filter: drop-shadow(0 0 2px black);"></div>`,
+                                    iconSize: [baseSize*2, baseSize*2],
+                                    iconAnchor: [baseSize, baseSize],
+                                    popupAnchor: [0, -baseSize]
                                 }),
                                 pane: 'markerPane'
                             });
-                            
-                            // Adicionar à camada apropriada
-                            if (regiao === "Região Centro Norte") {
-                                layerSocioCentroNorte.addLayer(marker);
-                            } else if (regiao === "Região Leste") {
-                                layerSocioLeste.addLayer(marker);
-                            } else if (regiao === "Região Oeste") {
-                                layerSocioOeste.addLayer(marker);
-                            } else if (regiao === "Região Sudeste") {
-                                layerSocioSudeste.addLayer(marker);
-                            } else if (regiao === "Região Sul") {
-                                layerSocioSul.addLayer(marker);
-                            }
+                            if (regiao === "Região Centro Norte") layerSocioCentroNorte.addLayer(marker);
+                            else if (regiao === "Região Leste") layerSocioLeste.addLayer(marker);
+                            else if (regiao === "Região Oeste") layerSocioOeste.addLayer(marker);
+                            else if (regiao === "Região Sudeste") layerSocioSudeste.addLayer(marker);
+                            else if (regiao === "Região Sul") layerSocioSul.addLayer(marker);
                         }
-                        
+
                         if (marker) {
-                            marker.bindPopup(criarPopupUnidade(f.properties));
-                            
-                            // Armazenar propriedades para referência
                             marker.feature = f;
-                            
-                            // Adicionar nome à lista de busca
-                            if (f.properties.Name) {
-                                listaUnidades.add(f.properties.Name);
-                            }
+
+                            marker.bindPopup(criarPopupUnidade(f.properties));
+
+                            marker.on('click', function(e) {
+                                selecionarUnidade(this);
+                                L.DomEvent.stopPropagation(e);
+                            });
+
+                            marker.on('mouseover', function() {
+                                if (this !== currentHighlight) {
+                                    if (this.setStyle) {
+                                        this.setStyle({ radius: this.options.radius + 2, weight: 3 });
+                                    } else if (this._icon) {
+                                        this._icon.style.filter = 'drop-shadow(0 0 5px yellow) drop-shadow(0 0 2px black)';
+                                    }
+                                }
+                            });
+
+                            marker.on('mouseout', function() {
+                                if (this !== currentHighlight) {
+                                    if (this.setStyle) {
+                                        this.setStyle({ radius: this.options.radius - 2, weight: 2 });
+                                    } else if (this._icon) {
+                                        this._icon.style.filter = 'drop-shadow(0 0 2px black)';
+                                    }
+                                }
+                            });
+
+                            if (f.properties.Name) listaUnidades.add(f.properties.Name);
                         }
-                        
                         return marker;
                     }
                 });
-                
                 popularLista();
             });
 
@@ -1176,33 +1207,12 @@
             });
         }
 
-        // Função para limpar destaque anterior
-        function clearHighlight() {
-            if (currentHighlight) {
-                // Restaurar estilo original
-                if (currentHighlight.setStyle) {
-                    currentHighlight.setStyle(currentHighlight.originalStyle);
-                    if (currentHighlight._path) {
-                        currentHighlight._path.classList.remove('highlight-marker');
-                    }
-                } else if (currentHighlight._icon) {
-                    currentHighlight._icon.classList.remove('triangle-marker-highlight');
-                }
-                currentHighlight = null;
-            }
-        }
-
-        // Função de busca de unidades com destaque melhorado
         function buscarUnidade() {
             let nome = document.getElementById("buscaUnidade").value;
             if (!nome) return;
 
-            // Limpar destaque anterior
-            clearHighlight();
-
             let encontrado = null;
-            let camadas = [layerPenLeste, layerPenOeste, layerSocioCentroNorte, layerSocioLeste, 
-                          layerSocioOeste, layerSocioSudeste, layerSocioSul];
+            let camadas = [layerPenLeste, layerPenOeste, layerSocioCentroNorte, layerSocioLeste, layerSocioOeste, layerSocioSudeste, layerSocioSul];
 
             for (let grupo of camadas) {
                 grupo.eachLayer(layer => {
@@ -1214,51 +1224,8 @@
             }
 
             if (encontrado) {
-                // Guardar estilo original e aplicar destaque
-                if (encontrado.setStyle) {
-                    // É um circleMarker
-                    encontrado.originalStyle = {
-                        radius: encontrado.options.radius,
-                        fillColor: encontrado.options.fillColor,
-                        color: encontrado.options.color,
-                        weight: encontrado.options.weight,
-                        fillOpacity: encontrado.options.fillOpacity
-                    };
-                    
-                    encontrado.setStyle({
-                        radius: encontrado.options.radius + 4,
-                        color: '#FF0000',
-                        weight: 4,
-                        fillOpacity: 1
-                    });
-                    
-                    // Adicionar classe de animação
-                    if (encontrado._path) {
-                        encontrado._path.classList.add('highlight-marker');
-                    }
-                    
-                } else if (encontrado._icon) {
-                    // É um marcador triangular
-                    encontrado._icon.classList.add('triangle-marker-highlight');
-                }
-                
-                currentHighlight = encontrado;
-                
-                // Centralizar no marcador
-                map.flyTo(encontrado.getLatLng(), 12, {
-                    duration: 1.5
-                });
-                
-                // Abrir popup
-                setTimeout(() => {
-                    encontrado.openPopup();
-                }, 1500);
-                
-                // Remover destaque após 5 segundos
-                setTimeout(() => {
-                    clearHighlight();
-                }, 5000);
-                
+                selecionarUnidade(encontrado);
+                map.flyTo(encontrado.getLatLng(), 12, { duration: 1.5 });
             } else {
                 alert("Unidade não encontrada: " + nome);
             }
@@ -1292,21 +1259,18 @@
             element.querySelector('.toggle').textContent = group.classList.contains('collapsed') ? '▶' : '▼';
         }
 
-        function toggleToolsPanel() {
-            document.getElementById('toolsPanel').classList.toggle('show');
-        }
+        function toggleToolsPanel() { document.getElementById('toolsPanel').classList.toggle('show'); }
 
-        // Funções de desenho (simplificadas sem leaflet-draw)
         function startDrawing(type) {
-            alert('Funcionalidade de desenho requer leaflet-draw, que foi removido. Utilize as ferramentas de medição.');
+            alert('Funcionalidade de desenho não está disponível.');
         }
 
         function startMeasuring() {
-            alert('Funcionalidade de medição requer leaflet-draw, que foi removido.');
+            alert('Funcionalidade de medição não está disponível.');
         }
 
         function startMeasuringArea() {
-            alert('Funcionalidade de medição de área requer leaflet-draw, que foi removido.');
+            alert('Funcionalidade de medição de área não está disponível.');
         }
 
         function clearDrawings() {
@@ -1364,7 +1328,7 @@
         }
 
         function exportData() {
-            alert('Funcionalidade de exportação requer leaflet-draw, que foi removido.');
+            alert('Funcionalidade de exportação não está disponível.');
         }
 
         // ========== VARIÁVEIS PARA COMPARAÇÃO ==========
@@ -1408,11 +1372,15 @@
         }
 
         function toggleInfo() {
-            alert('Clique em uma unidade no mapa para ver informações detalhadas.');
+            alert('Clique em uma unidade no mapa para ver detalhes no painel.');
         }
 
         document.getElementById('buscaUnidade').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') buscarUnidade();
+        });
+
+        map.on('click', function() {
+            limparSelecao();
         });
     </script>
 </body>
