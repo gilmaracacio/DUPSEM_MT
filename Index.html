@@ -230,7 +230,7 @@
             filter: drop-shadow(0 0 2px black);
         }
         
-        /* ESTILO DA LEGENDA DA RODOVIA - DINÂMICA DNIT */
+        /* ESTILO DA LEGENDA DA RODOVIA */
         .layer-color.line {
             width: 24px;
             height: 2px;
@@ -293,7 +293,7 @@
             background: #d9e2ec;
         }
 
-        /* Toolbar superior - apenas horizontal */
+        /* Toolbar superior */
         .toolbar {
             position: absolute;
             top: 12px;
@@ -508,7 +508,7 @@
             border: 1px solid #eef2f6;
         }
 
-        /* Popups - com transparência e acima de tudo */
+        /* Popups */
         .leaflet-popup-pane {
             z-index: 2000 !important;
         }
@@ -587,15 +587,9 @@
         }
 
         @keyframes pulse {
-            0% {
-                filter: drop-shadow(0 0 2px rgba(255,0,0,0.7));
-            }
-            50% {
-                filter: drop-shadow(0 0 15px rgba(255,0,0,0.9));
-            }
-            100% {
-                filter: drop-shadow(0 0 2px rgba(255,0,0,0.7));
-            }
+            0% { filter: drop-shadow(0 0 2px rgba(255,0,0,0.7)); }
+            50% { filter: drop-shadow(0 0 15px rgba(255,0,0,0.9)); }
+            100% { filter: drop-shadow(0 0 2px rgba(255,0,0,0.7)); }
         }
 
         /* Estilo para marcador selecionado (círculo) */
@@ -615,17 +609,11 @@
             to { filter: drop-shadow(0 0 15px rgba(255, 0, 0, 1)); }
         }
 
-        /* Ajuste para o painel de detalhes não sobrepor a toolbar */
-        .info-panel {
-            z-index: 600;
-        }
-
         .triangle-marker-highlight {
             filter: drop-shadow(0 0 10px rgba(255,0,0,0.9)) drop-shadow(0 0 2px black) !important;
             animation: pulse 1.5s infinite;
         }
 
-        /* Estilo para triângulos com efeito de sombra (igual à legenda) */
         .triangle-marker {
             background: transparent;
         }
@@ -634,7 +622,64 @@
             filter: drop-shadow(0 0 2px black);
         }
 
-        /* Panes para controle de ordem */
+        /* ===== ESTILOS ESPECÍFICOS PARA RODOVIAS ===== */
+        
+        .rodovia-visual {
+            stroke: #FF0000 !important;
+            stroke-width: 1 !important;
+            stroke-opacity: 1 !important;
+            vector-effect: non-scaling-stroke;
+            transition: all 0.2s ease;
+        }
+        
+        .rodovia-hit-area {
+            cursor: pointer !important;
+            stroke: transparent !important;
+            stroke-width: 30 !important;
+            opacity: 0 !important;
+            pointer-events: stroke !important;
+            transition: opacity 0.1s ease;
+        }
+        
+        .rodovia-hit-area:hover {
+            stroke: rgba(255, 215, 0, 0.2) !important;
+            opacity: 0.3 !important;
+        }
+        
+        .rodovia-selecionada {
+            stroke: #FFD700 !important;
+            stroke-width: 4 !important;
+            filter: drop-shadow(0 0 12px #FFD700) drop-shadow(0 0 6px #FFAA00) !important;
+        }
+        
+        .rodovia-visual-hover {
+            stroke: #FF8888 !important;
+            stroke-width: 3 !important;
+        }
+        
+        .rodovia-shadow-zoom {
+            filter: drop-shadow(0 0 2px rgba(100, 100, 100, 0.3));
+        }
+        
+        .rodovia-shadow-zoom-high {
+            filter: drop-shadow(0 0 4px rgba(100, 100, 100, 0.5));
+        }
+        
+        .layer-item.rodovia-item {
+            transition: background 0.2s;
+        }
+        
+        .layer-item.rodovia-item.selected {
+            background: #fff3e0;
+            border-left: 3px solid #FFD700;
+        }
+        
+        .layer-item.rodovia-item.selected .layer-label {
+            font-weight: 600;
+            color: #1e3a5f;
+        }
+
+        /* Panes */
         .leaflet-marker-pane {
             z-index: 900 !important;
         }
@@ -643,12 +688,10 @@
             z-index: 500 !important;
         }
 
-        /* Removido o controle de zoom padrão do Leaflet */
         .leaflet-control-zoom {
             display: none !important;
         }
 
-        /* Overrides do Leaflet */
         .leaflet-control-attribution {
             font-size: 9px !important;
             background: rgba(255,255,255,0.8) !important;
@@ -658,7 +701,6 @@
             left: 10px !important;
         }
 
-        /* Scrollbar */
         .left-panel::-webkit-scrollbar {
             width: 5px;
         }
@@ -673,7 +715,6 @@
             background: #9bb0c7;
         }
 
-        /* Rodapé */
         .footer {
             height: 36px;
             background: #1e3a5f;
@@ -691,52 +732,6 @@
             width: 100%;
             max-width: 1200px;
             padding: 0 20px;
-        }
-
-        /* ===== ESTILOS ESPECÍFICOS PARA RODOVIAS - DINÂMICA DNIT ===== */
-        
-        /* Camada base de rodovias */
-        .rodovia-layer-dnit {
-            transition: filter 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease;
-        }
-        
-        /* Efeito de sombra cinza em zoom alto */
-        .rodovia-shadow-zoom {
-            filter: drop-shadow(0 0 2px rgba(100, 100, 100, 0.3));
-        }
-        
-        .rodovia-shadow-zoom-high {
-            filter: drop-shadow(0 0 4px rgba(100, 100, 100, 0.5));
-        }
-        
-        /* Rodovia selecionada (amarela) */
-        .rodovia-selecionada {
-            filter: drop-shadow(0 0 8px #FFD700) !important;
-            stroke: #FFD700 !important;
-            stroke-width: 2.5 !important;
-            transition: all 0.2s ease;
-        }
-        
-        /* Efeito hover (opcional) */
-        .rodovia-hover {
-            stroke: #FF4444 !important;
-            stroke-width: 2 !important;
-            filter: drop-shadow(0 0 3px rgba(255, 68, 68, 0.5));
-        }
-        
-        /* Legenda interativa */
-        .layer-item.rodovia-item {
-            transition: background 0.2s;
-        }
-        
-        .layer-item.rodovia-item.selected {
-            background: #fff3e0;
-            border-left: 3px solid #FFD700;
-        }
-        
-        .layer-item.rodovia-item.selected .layer-label {
-            font-weight: 600;
-            color: #1e3a5f;
         }
     </style>
 </head>
@@ -854,7 +849,7 @@
                         <span class="layer-label">Faixa de Fronteira 200 km</span>
                     </div>
                     
-                    <!-- RODOVIAS FEDERAIS - com classe para seleção -->
+                    <!-- RODOVIAS FEDERAIS -->
                     <div class="layer-item rodovia-item" id="rodovia-layer-item">
                         <input type="checkbox" id="layer-rodovias" checked onchange="toggleLayer('rodovias', this.checked)">
                         <div class="layer-color line" style="background: #FF0000;"></div>
@@ -1003,7 +998,7 @@
         let currentHighlight = null;
         let infoPanel = null;
         
-        // Variável global para controle da rodovia selecionada
+        // Variáveis globais para controle de seleção
         window.selectedRodovia = null;
 
         // ================= FUNÇÕES AUXILIARES =================
@@ -1026,7 +1021,7 @@
             }
         });
 
-        // --- Funções de Popup e Painel de Detalhes ---
+        // --- Funções de Popup ---
         function criarPopupUnidade(propriedades) {
             let html = '<div class="popup-title"><i class="fa-solid fa-building"></i> Unidade</div><table class="popup-table">';
             const campos = { 'Name': 'Nome', 'Snippet': 'Endereço', 'Tipo': 'Tipo', 'Regiao': 'Região', 'Municipio': 'Município', 'Sigla': 'Sigla' };
@@ -1042,7 +1037,6 @@
             return `<div class="popup-title"><i class="fa-solid fa-shield"></i> RISP</div><table class="popup-table"><tr><td>RISP:</td><td>${propriedades.RISP || '-'}</td></tr><tr><td>Nota:</td><td>${propriedades.NOTA || '-'}</td></tr></table>`;
         }
 
-        // Função para criar popup de rodovias federais
         function criarPopupRodovia(propriedades) {
             let html = '<div class="popup-title"><i class="fa-solid fa-road"></i> Rodovias Federais</div><table class="popup-table">';
             const campos = { 
@@ -1111,11 +1105,27 @@
         }
 
         function selecionarUnidade(marker) {
+            // Limpar seleção de rodovia se houver
+            if (window.selectedRodovia) {
+                limparSelecaoRodovia();
+            }
+            
             limparSelecao();
 
             if (marker.setStyle) {
-                marker.originalStyle = { radius: marker.options.radius, fillColor: marker.options.fillColor, color: marker.options.color, weight: marker.options.weight, fillOpacity: marker.options.fillOpacity };
-                marker.setStyle({ radius: marker.options.radius + 6, color: '#FF0000', weight: 4, fillOpacity: 1 });
+                marker.originalStyle = { 
+                    radius: marker.options.radius, 
+                    fillColor: marker.options.fillColor, 
+                    color: marker.options.color, 
+                    weight: marker.options.weight, 
+                    fillOpacity: marker.options.fillOpacity 
+                };
+                marker.setStyle({ 
+                    radius: marker.options.radius + 6, 
+                    color: '#FF0000', 
+                    weight: 4, 
+                    fillOpacity: 1 
+                });
                 if (marker._path) {
                     marker._path.classList.add('selected-marker');
                     marker._path.classList.remove('highlight-marker');
@@ -1129,50 +1139,39 @@
             currentHighlight = marker;
             marker.openPopup();
         }
+
+        // ===== FUNÇÕES PARA RODOVIAS =====
         
-        // ===== FUNÇÕES ESPECÍFICAS PARA RODOVIAS =====
-        
-        // Função para atualizar sombra das rodovias baseado no zoom
         function updateRodoviasShadow() {
             if (!layerRodovias) return;
             
             const zoom = map.getZoom();
             
             layerRodovias.eachLayer(function(layer) {
-                if (!layer._path) return;
-                
-                // Não modificar a rodovia selecionada
-                if (window.selectedRodovia === layer) return;
-                
-                // Aplica sombra baseada no zoom
-                if (zoom >= 10) {
-                    layer._path.style.filter = 'drop-shadow(0 0 4px rgba(100,100,100,0.5))';
-                    layer._path.classList.add('rodovia-shadow-zoom-high');
-                    layer._path.classList.remove('rodovia-shadow-zoom');
-                } else if (zoom >= 8) {
-                    layer._path.style.filter = 'drop-shadow(0 0 2px rgba(100,100,100,0.3))';
-                    layer._path.classList.add('rodovia-shadow-zoom');
-                    layer._path.classList.remove('rodovia-shadow-zoom-high');
-                } else {
-                    layer._path.style.filter = 'none';
-                    layer._path.classList.remove('rodovia-shadow-zoom', 'rodovia-shadow-zoom-high');
+                if (layer.options && layer.options.className === 'rodovia-visual' && layer._path) {
+                    if (window.selectedRodovia !== layer) {
+                        if (zoom >= 10) {
+                            layer._path.style.filter = 'drop-shadow(0 0 3px rgba(100,100,100,0.5))';
+                        } else if (zoom >= 8) {
+                            layer._path.style.filter = 'drop-shadow(0 0 1px rgba(100,100,100,0.3))';
+                        } else {
+                            layer._path.style.filter = 'none';
+                        }
+                    }
                 }
             });
         }
         
-        // Função para limpar seleção de rodovia
         function limparSelecaoRodovia() {
             if (window.selectedRodovia) {
-                // Restaurar estilo original
                 window.selectedRodovia.setStyle({
                     color: '#FF0000',
-                    weight: 1,
-                    opacity: 1
+                    weight: 2
                 });
                 
                 if (window.selectedRodovia._path) {
                     window.selectedRodovia._path.classList.remove('rodovia-selecionada');
-                    // Reaplicar sombra de zoom
+                    
                     const zoom = map.getZoom();
                     if (zoom >= 10) {
                         window.selectedRodovia._path.style.filter = 'drop-shadow(0 0 4px rgba(100,100,100,0.5))';
@@ -1185,41 +1184,44 @@
                 
                 window.selectedRodovia = null;
                 
-                // Remover destaque da legenda
                 const rodoviaItem = document.getElementById('rodovia-layer-item');
-                if (rodoviaItem) {
-                    rodoviaItem.classList.remove('selected');
-                }
+                if (rodoviaItem) rodoviaItem.classList.remove('selected');
             }
         }
         
-        // Função para selecionar rodovia
         function selecionarRodovia(rodoviaLayer) {
-            // Limpar seleção anterior
-            limparSelecaoRodovia();
+            // Limpar seleção de unidade se houver
+            if (currentHighlight) {
+                limparSelecao();
+            }
             
-            // Aplicar estilo de seleção (amarelo)
+            // Limpar seleção anterior de rodovia
+            if (window.selectedRodovia && window.selectedRodovia !== rodoviaLayer) {
+                window.selectedRodovia.setStyle({
+                    color: '#FF0000',
+                    weight: 2
+                });
+                if (window.selectedRodovia._path) {
+                    window.selectedRodovia._path.classList.remove('rodovia-selecionada');
+                }
+            }
+            
+            // Aplicar estilo de seleção
             rodoviaLayer.setStyle({
                 color: '#FFD700',
-                weight: 2.5,
-                opacity: 1
+                weight: 4
             });
             
             if (rodoviaLayer._path) {
                 rodoviaLayer._path.classList.add('rodovia-selecionada');
-                rodoviaLayer._path.style.filter = 'drop-shadow(0 0 8px #FFD700)';
+                rodoviaLayer._path.style.filter = 'drop-shadow(0 0 12px #FFD700) drop-shadow(0 0 6px #FFAA00)';
             }
             
-            // Guardar referência
             window.selectedRodovia = rodoviaLayer;
             
-            // Destacar na legenda
             const rodoviaItem = document.getElementById('rodovia-layer-item');
-            if (rodoviaItem) {
-                rodoviaItem.classList.add('selected');
-            }
+            if (rodoviaItem) rodoviaItem.classList.add('selected');
             
-            // Abrir popup
             rodoviaLayer.openPopup();
         }
 
@@ -1319,99 +1321,123 @@
                 layerEstado.addTo(map);
             });
 
-        // ===== RODOVIAS FEDERAIS - IMPLEMENTAÇÃO COMPLETA COM DINÂMICA DNIT =====
+        // ===== RODOVIAS FEDERAIS =====
         fetch("https://raw.githubusercontent.com/gilmaracacio/DUPSEM_MT/main/Rodovias_Federais.geojson")
             .then(r => r.json())
             .then(data => {
-                layerRodovias = L.geoJSON(data, {
-                    style: {
-                        color: "#FF0000",           // Vermelho padrão
-                        weight: 1,                    // Peso 1 (fino, igual ao DNIT)
-                        opacity: 1,
-                        fillOpacity: 0,
-                        pane: 'rodoviasPane',
-                        className: 'rodovia-layer-dnit'
-                    },
-                    onEachFeature: (feature, layer) => {
+                console.log('✅ Rodovias carregadas:', data.features.length, 'trechos');
+                
+                layerRodovias = L.layerGroup();
+                
+                data.features.forEach((feature, index) => {
+                    try {
                         let props = feature.properties || {};
-                        layer.bindPopup(criarPopupRodovia(props));
+                        let coordinates = feature.geometry.coordinates;
                         
-                        // Guarda o estilo original
-                        layer.originalStyle = {
+                        let latlngs = [];
+                        if (feature.geometry.type === 'MultiLineString') {
+                            coordinates.forEach(line => {
+                                line.forEach(coord => {
+                                    latlngs.push([coord[1], coord[0]]);
+                                });
+                            });
+                        } else {
+                            coordinates.forEach(coord => {
+                                latlngs.push([coord[1], coord[0]]);
+                            });
+                        }
+                        
+                        if (latlngs.length < 2) return;
+                        
+                        let linhaVisual = L.polyline(latlngs, {
                             color: "#FF0000",
-                            weight: 1,
-                            opacity: 1
-                        };
-
-
-                        // Aplica sombra inicial baseada no zoom atual
-                        setTimeout(() => {
-                            if (layer._path) {
-                                const zoom = map.getZoom();
-                                if (zoom >= 10) {
-                                    layer._path.style.filter = 'drop-shadow(0 0 4px rgba(100,100,100,0.5))';
-                                } else if (zoom >= 8) {
-                                    layer._path.style.filter = 'drop-shadow(0 0 2px rgba(100,100,100,0.3))';
-                                }
-                            }
-                        }, 100);
-
-                        // --- EVENTO DE CLICK (SELEÇÃO) ---
-                        layer.on('click', function(e) {
-                            selecionarRodovia(this);
+                            weight: 2,
+                            opacity: 1,
+                            smoothFactor: 1,
+                            interactive: false,
+                            className: 'rodovia-visual',
+                            pane: 'rodoviasPane'
+                        });
+                        
+                        let linhaClique = L.polyline(latlngs, {
+                            color: "transparent",
+                            weight: 30,
+                            opacity: 0,
+                            fillOpacity: 0,
+                            interactive: true,
+                            bubblingMouseEvents: false,
+                            className: 'rodovia-hit-area',
+                            smoothFactor: 2,
+                            pane: 'overlayPane'
+                        });
+                        
+                        linhaClique.visualRef = linhaVisual;
+                        linhaClique.feature = feature;
+                        linhaVisual.feature = feature;
+                        
+                        linhaVisual.bindPopup(criarPopupRodovia(props));
+                        
+                        linhaClique.on('click', function(e) {
+                            selecionarRodovia(this.visualRef);
                             L.DomEvent.stopPropagation(e);
                         });
-
-                        // --- EFEITO HOVER (opcional) ---
-                        layer.on('mouseover', function() {
-                            if (window.selectedRodovia !== this) {
-                                if (this._path) {
-                                    this._path.classList.add('rodovia-hover');
-                                }
-                                this.setStyle({
-                                    weight: 2,
-                                    color: '#FF4444'
+                        
+                        linhaClique.on('mouseover', function() {
+                            document.body.style.cursor = 'pointer';
+                            if (window.selectedRodovia !== this.visualRef) {
+                                this.visualRef.setStyle({
+                                    color: '#FF8888',
+                                    weight: 3
                                 });
                             }
                         });
-
-                        layer.on('mouseout', function() {
-                            if (window.selectedRodovia !== this) {
-                                if (this._path) {
-                                    this._path.classList.remove('rodovia-hover');
-                                }
-                                this.setStyle(this.originalStyle);
-                                // Reaplica a sombra de zoom
+                        
+                        linhaClique.on('mouseout', function() {
+                            document.body.style.cursor = '';
+                            if (window.selectedRodovia !== this.visualRef) {
+                                this.visualRef.setStyle({
+                                    color: '#FF0000',
+                                    weight: 2
+                                });
+                                
                                 const zoom = map.getZoom();
-                                if (zoom >= 10) {
-                                    this._path.style.filter = 'drop-shadow(0 0 4px rgba(100,100,100,0.5))';
-                                } else if (zoom >= 8) {
-                                    this._path.style.filter = 'drop-shadow(0 0 2px rgba(100,100,100,0.3))';
-                                } else {
-                                    this._path.style.filter = 'none';
+                                if (this.visualRef._path) {
+                                    if (zoom >= 10) {
+                                        this.visualRef._path.style.filter = 'drop-shadow(0 0 4px rgba(100,100,100,0.5))';
+                                    } else if (zoom >= 8) {
+                                        this.visualRef._path.style.filter = 'drop-shadow(0 0 2px rgba(100,100,100,0.3))';
+                                    } else {
+                                        this.visualRef._path.style.filter = 'none';
+                                    }
                                 }
                             }
                         });
+                        
+                        layerRodovias.addLayer(linhaVisual);
+                        layerRodovias.addLayer(linhaClique);
+                        
+                    } catch (err) {
+                        console.error('Erro ao processar feature', index, err);
                     }
                 });
                 
-                // Adiciona camada ao mapa
                 layerRodovias.addTo(map);
                 
-                // Força atualização da sombra no zoom
                 map.on('zoomend', function() {
                     if (layerRodovias) {
                         updateRodoviasShadow();
                     }
                 });
                 
-                console.log('✅ Rodovias Federais carregadas com estilo DNIT');
+                console.log('✅ Rodovias adicionadas ao mapa. Total de layers:', layerRodovias.getLayers().length);
+                
             })
             .catch(error => {
-                console.error('❌ Erro ao carregar Rodovias Federais:', error);
+                console.error('❌ Erro FATAL ao carregar Rodovias Federais:', error);
+                alert('Erro ao carregar Rodovias Federais. Verifique o console (F12) para detalhes.');
             });
 
-        // UNIDADES (DUPSEM_MT)
+        // ===== UNIDADES (DUPSEM_MT) - MANTIDO ORIGINAL =====
         fetch("https://raw.githubusercontent.com/gilmaracacio/DUPSEM_MT/main/DUPSEM_MT.geojson")
             .then(r => r.json())
             .then(data => {
@@ -1435,30 +1461,31 @@
                             if (regiao === "Regional Leste") layerPenLeste.addLayer(marker);
                             else layerPenOeste.addLayer(marker);
 
-} else if (tipo === "Sistema Socioeducativo de Mato Grosso") {
-    let cor = { "Região Centro Norte": "#0000FF", "Região Leste": "#800080", 
-                "Região Oeste": "#90EE90", "Região Sudeste": "#8B4513", 
-                "Região Sul": "#008000" }[regiao];
-    
-    // Para triângulos, a transparência é controlada no HTML do ícone
-    marker = L.marker(latlng, {
-        icon: L.divIcon({
-            className: 'triangle-marker',
-            html: `<div style="width:0; height:0; 
-                    border-left: ${baseSize}px solid transparent; 
-                    border-right: ${baseSize}px solid transparent; 
-                    border-bottom: ${baseSize*2}px solid ${cor}; 
-                    position:relative; 
-                    opacity: 0.8;                    /* <-- TRANSPARÊNCIA DO TRIÂNGULO */
-                    filter: drop-shadow(0 0 2px black);"></div>`,
-            iconSize: [baseSize*2, baseSize*2],
-            iconAnchor: [baseSize, baseSize],
-            popupAnchor: [0, -baseSize]
-        }),
-        pane: 'markerPane'
-    });
-
-
+                        } else if (tipo === "Sistema Socioeducativo de Mato Grosso") {
+                            let cor = { 
+                                "Região Centro Norte": "#0000FF", 
+                                "Região Leste": "#800080", 
+                                "Região Oeste": "#90EE90", 
+                                "Região Sudeste": "#8B4513", 
+                                "Região Sul": "#008000" 
+                            }[regiao];
+                            
+                            marker = L.marker(latlng, {
+                                icon: L.divIcon({
+                                    className: 'triangle-marker',
+                                    html: `<div style="width:0; height:0; 
+                                            border-left: ${baseSize}px solid transparent; 
+                                            border-right: ${baseSize}px solid transparent; 
+                                            border-bottom: ${baseSize*2}px solid ${cor}; 
+                                            position:relative; 
+                                            opacity: 0.8;
+                                            filter: drop-shadow(0 0 2px black);"></div>`,
+                                    iconSize: [baseSize*2, baseSize*2],
+                                    iconAnchor: [baseSize, baseSize],
+                                    popupAnchor: [0, -baseSize]
+                                }),
+                                pane: 'markerPane'
+                            });
 
                             if (regiao === "Região Centro Norte") layerSocioCentroNorte.addLayer(marker);
                             else if (regiao === "Região Leste") layerSocioLeste.addLayer(marker);
@@ -1469,14 +1496,9 @@
 
                         if (marker) {
                             marker.feature = f;
-
                             marker.bindPopup(criarPopupUnidade(f.properties));
 
                             marker.on('click', function(e) {
-                                // Se houver rodovia selecionada, limpa seleção
-                                if (window.selectedRodovia) {
-                                    limparSelecaoRodovia();
-                                }
                                 selecionarUnidade(this);
                                 L.DomEvent.stopPropagation(e);
                             });
@@ -1536,10 +1558,7 @@
             }
 
             if (encontrado) {
-                // Se houver rodovia selecionada, limpa seleção
-                if (window.selectedRodovia) {
-                    limparSelecaoRodovia();
-                }
+                if (window.selectedRodovia) limparSelecaoRodovia();
                 selecionarUnidade(encontrado);
                 map.flyTo(encontrado.getLatLng(), 12, { duration: 1.5 });
             } else {
@@ -1571,7 +1590,6 @@
                 map.addLayer(layer);
             } else {
                 map.removeLayer(layer);
-                // Se a camada de rodovias for desligada, limpar seleção
                 if (layerType === 'rodovias' && window.selectedRodovia) {
                     limparSelecaoRodovia();
                 }
@@ -1600,14 +1618,6 @@
 
         function clearDrawings() {
             alert('Funcionalidade de desenho não está disponível.');
-        }
-
-        function undoLastAction() {
-            alert('Funcionalidade de desfazer não está disponível.');
-        }
-
-        function redoLastAction() {
-            alert('Funcionalidade de refazer não está disponível.');
         }
 
         function toggleFullscreen() {
@@ -1652,10 +1662,6 @@
             });
         }
 
-        function exportData() {
-            alert('Funcionalidade de exportação não está disponível.');
-        }
-
         // ========== VARIÁVEIS PARA COMPARAÇÃO ==========
         let leftBase = gsat;
         let rightBase = gmap;
@@ -1697,7 +1703,7 @@
         }
 
         function toggleInfo() {
-            alert('Clique em uma unidade no mapa para ver detalhes no painel.');
+            alert('Clique nos elementos do mapa para ver informações');
         }
 
         document.getElementById('buscaUnidade').addEventListener('keypress', function (e) {
